@@ -1,0 +1,90 @@
+ import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+
+import 'models/tfquiz.dart';
+
+class TFDetailsPage extends StatefulWidget {
+  final List<TFQuizErrors> errors;
+
+  TFDetailsPage({Key key, @required this.errors}) : super(key: key);
+
+  @override
+  _TFDetailsPageState createState() => _TFDetailsPageState();
+}
+
+class _TFDetailsPageState extends State<TFDetailsPage> {
+  List<TFQuizErrors> errors;
+  YoutubePlayerController _controller;
+  var isLoading = true;
+
+  Future runYoutubePlayer() async {
+    Future.delayed(Duration(milliseconds: 2000));
+    _controller = YoutubePlayerController(
+        initialVideoId: YoutubePlayer.convertUrlToId(widget.errors[0].url),
+        flags: YoutubePlayerFlags(
+          startAt: widget.errors[0].start,
+          endAt: widget.errors[0].end,
+          hideControls: true,
+          enableCaption: false,
+          isLive: false,
+          autoPlay: true,
+        ));
+  }
+
+  /*_getAllAndRunYoutubePlayer() async {
+    runYoutubePlayer();
+  }*/
+
+  @override
+  void initState() {
+    super.initState();
+    runYoutubePlayer();
+  }
+
+  @override
+  void deactivate() {
+    _controller.pause();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return YoutubePlayerBuilder(
+        player: YoutubePlayer(controller: _controller),
+        builder: (context, player) {
+          return Scaffold(
+            backgroundColor: Color(0xFFFFFFFF),
+            body: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Builder(
+                    builder: (BuildContext context) => Column(
+                      children: <Widget>[
+                        SizedBox(height: 35),
+                        Center(
+                          child: Text(
+                            widget.errors[0].title,
+                            style: TextStyle(
+                              fontFamily: 'Aclonica',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 25,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 15),
+                        Center(
+                          child: Text(widget.errors[0].question),
+                        ),
+                      ],
+                    ),
+                  ),
+          );
+        });
+  }
+}
