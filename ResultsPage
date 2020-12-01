@@ -1,0 +1,120 @@
+ import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:yp_listeningapp/models/tfquiz.dart';
+
+import 'TFDetailsPage.dart';
+
+class ResultsPage2 extends StatefulWidget {
+  List<TFQuizErrors> errors;
+   int score;
+
+  ResultsPage2({
+    Key key,
+    @required  this.errors, this.score,
+  }) : super(key: key);
+
+  @override
+  _ResultsPage2State createState() => _ResultsPage2State();
+}
+
+class _ResultsPage2State extends State<ResultsPage2> {
+  List<TFQuizErrors> errors;
+  int score;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Container(
+          child: Column(
+            children: <Widget>[
+              SizedBox(height: 35),
+              Center(child: RichText(
+                text: TextSpan(
+                  text: 'Score: ',
+                  style: TextStyle(
+                    fontFamily: 'Aclonica',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    fontSize: 20,),
+
+                  children: <TextSpan>[
+                    TextSpan (text:
+                    widget.score.toString(),
+                      style: TextStyle(
+                      fontFamily: 'Aclonica',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 25,
+                      color: Colors.blue,
+                    ),
+
+                    ),
+                  ],
+
+                ),),),
+              const SizedBox(height: 10,),
+              Expanded(
+                  child: ListView.builder(
+                    itemCount: widget.errors.length,
+                    itemBuilder: (context, index) => buildErrorsListView(context, index)
+                  ),),
+              Text(widget.errors[1].end.toString()),
+            ],
+          ),
+        ),
+      ),
+
+    );
+  }
+
+  Widget buildErrorsListView(BuildContext context, int index){
+    return new Container(
+      child: Card(
+        child: Column(
+          children: <Widget>[
+            GestureDetector(
+              onTap: (){
+
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                    builder: (context) => TFDetailsPage(
+                      errors: errors,
+                    )));
+
+              },
+              child: Row(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(widget.errors[index].question.toString(),
+                      style: TextStyle(
+                          fontSize: 20,
+                          fontFamily: 'Handlee',
+                          color: Colors.black),
+                    ),
+                  ),
+                 /* Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(icon: Icon(Icons.arrow_forward),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      TFDetailsPage(
+                                          errors: errors)));
+                        }
+                    ),
+                  )*/
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
