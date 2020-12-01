@@ -1,0 +1,457 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter/cupertino.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'ResultsPage.dart';
+import 'ResultsPage2.dart';
+import 'models/tfquiz.dart';
+
+class TestColumn2 extends StatefulWidget {
+  @override
+  _TestColumn2State createState() => _TestColumn2State();
+}
+
+class _TestColumn2State extends State<TestColumn2> {
+  //Quiz data
+  var index = 0;
+  var questionnumber = 1;
+  var isLoading = true;
+  var score = 0;
+  List<TFQuizErrors> errors = [];
+
+  //Api data
+  final String urlall = "http://yospanish.000webhostapp.com/VFKids.php";
+  final String urltitle = "http://yospanish.000webhostapp.com/VFTitles.php";
+  List answerData = [];
+  List questionData = [];
+  List titleData = [];
+  List urlData = [];
+
+  //Video data
+  YoutubePlayerController _controller;
+  List startData = [];
+  List endData = [];
+  List<int> intstartData = [];
+  List<int> intendData = [];
+
+  void runYoutubePlayer() {
+    _controller = YoutubePlayerController(
+        initialVideoId: YoutubePlayer.convertUrlToId(urlData[0]),
+        flags: YoutubePlayerFlags(
+          startAt: intstartData[index],
+          endAt: intendData[index],
+          hideControls: true,
+          enableCaption: false,
+          isLive: false,
+          autoPlay: true,
+        ));
+  }
+
+  Future getAll() async {
+    var response = await http
+        .get(Uri.encodeFull(urlall), headers: {"Accept": "application/json"});
+    List LQuestions = jsonDecode(response.body)['q3a'];
+
+    response = await http
+        .get(Uri.encodeFull(urlall), headers: {"Accept": "application/json"});
+    List LAnswers = jsonDecode(response.body)['a3a'];
+
+    response = await http
+        .get(Uri.encodeFull(urlall), headers: {"Accept": "application/json"});
+    List LStart = jsonDecode(response.body)['start3a'];
+
+    response = await http
+        .get(Uri.encodeFull(urlall), headers: {"Accept": "application/json"});
+    List LEnd = jsonDecode(response.body)['end3a'];
+
+    response = await http
+        .get(Uri.encodeFull(urltitle), headers: {"Accept": "application/json"});
+    List LTitles = jsonDecode(response.body)['t3a'];
+
+    response = await http
+        .get(Uri.encodeFull(urltitle), headers: {"Accept": "application/json"});
+    List LUrls = jsonDecode(response.body)['url3a'];
+
+    setState(() {
+      questionData = LQuestions;
+      answerData = LAnswers;
+      titleData = LTitles;
+      urlData = LUrls;
+      isLoading = false;
+      startData = LStart;
+      endData = LEnd;
+
+      endData.forEach((el) {
+        intendData.add(int.parse(el));
+      });
+      startData.forEach((el) {
+        intstartData.add(int.parse(el));
+      });
+    });
+  }
+
+  _getAllAndRunYoutubePlayer() async {
+    await getAll();
+    runYoutubePlayer();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getAllAndRunYoutubePlayer();
+  }
+
+  @override
+  void deactivate() {
+    _controller.pause();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return YoutubePlayerBuilder(
+        player: YoutubePlayer(
+          controller: _controller,
+        ),
+        builder: (context, player) {
+          return Scaffold(
+            backgroundColor: Color(0xFFFFFFFF),
+            body: isLoading
+                ? Center(child: CircularProgressIndicator())
+                : Builder(
+                    builder: (BuildContext context) =>
+                        Column(children: <Widget>[
+                          Column(
+                            children: [
+                              SizedBox(height: 35),
+                              Center(
+                                child: Text(
+                                  titleData[0],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontFamily: 'Aclonica',
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(height: 10),
+
+                              //Score & QuestionNumber section
+                              Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Container(
+                                          child: RichText(
+                                            text: TextSpan(
+                                              text: 'Score: ',
+                                              style: TextStyle(
+                                                fontFamily: 'Handlee',
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black,
+                                                fontSize: 18,),
+
+                                              children: <TextSpan>[
+                                                TextSpan (text:
+                                                '$score', style: TextStyle(
+                                                  fontFamily: 'Aclonica',
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 25,
+                                                  color: Colors.pinkAccent,
+                                                ),
+
+                                                ),
+                                              ],
+
+                                            ),),
+                                        ),
+                                      ),
+
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Container(
+                                            child: RichText(
+                                              text: TextSpan(
+                                                text: 'Q: ',
+                                                style: TextStyle(
+                                                  fontFamily: 'Handlee',
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black,
+                                                  fontSize: 18,),
+
+                                                children: <TextSpan>[
+                                                  TextSpan (text:
+                                                  '$questionnumber', style: TextStyle(
+                                                    fontFamily: 'Aclonica',
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 25,
+                                                    color: Colors.pinkAccent,
+                                                  ),
+
+                                                  ),
+                                                  TextSpan(
+                                                    text: '  /  10 ',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Handlee',
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.black,
+                                                      fontSize: 18,),
+                                                  ),
+                                                ],
+                                              ),)
+                                        ),
+                                      )
+                                    ]
+                                ),
+                              ),
+
+                              SizedBox(height: 15,),
+                            ],
+                          ),
+                      player,
+                          Align(
+                            alignment: Alignment.center,
+                            child: IconButton(
+                                icon: Icon(
+                                  Icons.play_circle_fill,
+                                  color: Colors.green,
+                                  size: 40,
+                                ),
+                                onPressed: () {
+                                  _controller.load(
+                                    YoutubePlayer.convertUrlToId(urlData[0]),
+                                    startAt: intstartData[index],
+                                    endAt: intendData[index],
+                                  );
+                                }),
+                          ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            questionData[index],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontFamily: 'Handlee',
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black),
+                          ),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+
+                          FlatButton(
+                              height: 50,
+                              shape: RoundedRectangleBorder(
+                                // side: BorderSide(color: Colors.white, width: 5) ,
+                                borderRadius: BorderRadius.circular(30.0),
+                              ),
+                              textColor: Colors.white,
+                              color: Colors.pinkAccent,
+                              child: Text(
+                                'VERDADERO',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 25.0,
+                                  fontFamily: 'Aclonica',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onPressed: () {
+                                setState(
+                                      () {
+                                    if (index < questionData.length - 1) {
+                                      index = index + 1;
+                                      questionnumber = questionnumber + 1;
+
+                                      _controller.load(
+                                        YoutubePlayer.convertUrlToId(urlData[0]),
+                                        startAt: intstartData[index],
+                                        endAt: intendData[index],
+                                      );
+
+                                    } else {
+
+                                      _controller.pause();
+
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ResultsPage2(
+                                                      errors: errors,
+                                                  score: score,)))
+                                          .then((value) {
+                                        setState(() {
+                                          score = 0;
+                                          questionnumber = 1;
+                                          index = 0;
+                                          errors = [];
+
+
+                                        });
+                                      });
+                                    }
+                                  },
+                                );
+
+                                if (answerData[index]
+                                    .toString()
+                                    .contains('v')) {
+                                  score = score + 1;
+                                  final snackbar = SnackBar(
+                                    content: Text("Correcto!",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Aclonica',
+                                          fontSize: 20,
+                                        )),
+                                    duration: Duration(milliseconds: 300),
+                                    backgroundColor: Colors.green,
+                                  );
+                                  Scaffold.of(context).showSnackBar(snackbar);
+                                } else {
+                                  errors.add(TFQuizErrors(
+                                    questionData[index].toString(),
+                                    answerData[index].toString(),
+                                    urlData[0].toString(),
+                                    titleData[0].toString(),
+                                    intstartData[index],
+                                    intendData[index],
+
+                                  ));
+
+                                  final snackbar = SnackBar(
+                                    content: Text("Incorrecto!",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Aclonica',
+                                        fontSize: 20,
+                                      ),),
+                                    duration: Duration(milliseconds: 300),
+                                    backgroundColor: Colors.red,
+                                  );
+                                  Scaffold.of(context).showSnackBar(snackbar);
+                                }
+
+                              }),
+                          SizedBox(height: 15),
+
+                          //FalseButton
+                          FlatButton(
+                            height: 50,
+                            shape: RoundedRectangleBorder(
+                              //  side: BorderSide(width: 5) ,
+                              borderRadius: BorderRadius.circular(30.0),
+                            ),
+                            color: Colors.pinkAccent,
+                            child: Text(
+                              'FALSO',
+                              style: TextStyle(
+                                fontSize: 25.0,
+                                fontFamily: 'Aclonica',
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            onPressed: () {
+                              setState(
+                                    () {
+                                  if (index < questionData.length - 1) {
+                                    index = index + 1;
+                                    questionnumber = questionnumber + 1;
+
+                                    _controller.load(
+                                      YoutubePlayer.convertUrlToId(urlData[0]),
+                                      startAt: intstartData[index],
+                                      endAt: intendData[index],
+                                    );
+
+                                  } else {
+                                    _controller.pause();
+
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                ResultsPage2(
+                                                    errors: errors,
+                                                score: score,)))
+                                        .then((value) {
+                                      setState(() {
+                                        score = 0;
+                                        questionnumber = 1;
+                                        index = 0;
+                                        errors = [];
+
+
+                                      });
+                                    });
+                                  }
+                                },
+                              );
+                              if (answerData[index]
+                                  .toString()
+                                  .contains('f')) {
+                                score = score + 1;
+                                final snackbar = SnackBar(
+                                  content: Text("Correcto!",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Aclonica',
+                                      fontSize: 20,
+                                    ),),
+                                  duration: Duration(milliseconds: 300),
+                                  backgroundColor: Colors.green,
+                                );
+                                Scaffold.of(context).showSnackBar(snackbar);
+                              } else {
+                                {
+                                  errors.add(TFQuizErrors(
+                                    questionData[index],
+                                    answerData[index],
+                                    urlData[0].toString(),
+                                    titleData[0].toString(),
+                                    intstartData[index],
+                                    intendData[index],
+
+                                  ));
+
+                                  final snackbar = SnackBar(
+                                    content: Text("Incorrecto!",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Aclonica',
+                                          fontSize: 20,
+                                        )),
+                                    duration: Duration(milliseconds: 300),
+                                    backgroundColor: Colors.red,
+                                  );
+                                  Scaffold.of(context).showSnackBar(snackbar);
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      )
+                    ]),
+                  ),
+          );
+        });
+  }
+}
